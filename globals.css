@@ -1,0 +1,961 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #17231e;
+  --muted: #69736e;
+  --line: #dce4df;
+  --paper: #fff;
+  --cream: #f5f6f2;
+  --green: #1d6548;
+  --orange: #ef7b45;
+  --count: #6c4fc4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--cream);
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--cream);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.topbar {
+  height: 76px;
+  padding: 0 max(28px, calc((100vw - 1180px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--green);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: 0 5px 14px rgba(29, 101, 72, 0.2);
+}
+
+.brand div {
+  display: grid;
+  gap: 2px;
+}
+
+.brand strong {
+  font-size: 15px;
+}
+
+.brand small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.todayButton {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 10px 15px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.todayButton:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.shell {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.hero {
+  padding: 58px 0 42px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 36px;
+}
+
+.eyebrow {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.19em;
+  margin: 0 0 12px;
+}
+
+h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(42px, 5.2vw, 68px);
+  line-height: 0.98;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+h1 span {
+  color: var(--green);
+  font-style: italic;
+}
+
+.intro {
+  max-width: 610px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 22px 0 0;
+}
+
+.monthPicker {
+  min-width: 330px;
+  display: grid;
+  grid-template-columns: 50px 1fr 50px;
+  align-items: center;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: 0 18px 35px rgba(23, 35, 30, 0.16);
+}
+
+.monthPicker button {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 13px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+  font-size: 20px;
+}
+
+.monthPicker button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.monthPicker div {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.monthPicker small {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #aeb9b4;
+}
+
+.monthPicker strong {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1.25fr;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 9px 30px rgba(23, 35, 30, 0.05);
+}
+
+.stat {
+  min-height: 142px;
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid var(--line);
+}
+
+.stat:first-child {
+  border-left: 0;
+}
+
+.stat > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stat > strong {
+  font-family: Georgia, serif;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 500;
+  margin: 10px 0 7px;
+}
+
+.stat > strong em {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #8c9691;
+  font-style: normal;
+  margin-left: 3px;
+}
+
+.stat > small {
+  color: #929c97;
+  font-size: 11px;
+}
+
+.stat.primary {
+  color: #fff;
+  background: var(--green);
+}
+
+.stat.primary span,
+.stat.primary small {
+  color: #c6e3d3;
+}
+
+.progress {
+  height: 6px;
+  width: 100%;
+  background: #e8ece9;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.progress i {
+  height: 100%;
+  display: block;
+  background: var(--orange);
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+.finance {
+  margin-top: 20px;
+  padding: 24px 26px;
+  display: grid;
+  grid-template-columns: 1.05fr 1.45fr 1fr;
+  align-items: center;
+  gap: 28px;
+  background: #28213f;
+  color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 13px 30px rgba(40, 33, 63, 0.15);
+}
+
+.finance .eyebrow {
+  color: #cfc2f2;
+  margin-bottom: 8px;
+}
+
+.financeIntro h2 {
+  font-size: 38px;
+  color: #fff;
+}
+
+.financeIntro > span {
+  display: block;
+  margin-top: 5px;
+  color: #bdb6cd;
+  font-size: 10px;
+}
+
+.financeProgress {
+  padding: 0 28px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.financeProgressHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 11px;
+}
+
+.financeProgressHead strong {
+  font-size: 13px;
+}
+
+.financeProgressHead span {
+  color: #bdb6cd;
+  font-size: 10px;
+}
+
+.moneyBar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.moneyBar i {
+  height: 100%;
+  display: block;
+  background: #a98cea;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.financeProgress p {
+  margin: 11px 0 0;
+  color: #cfc9da;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.financeProgress p strong {
+  color: #fff;
+}
+
+.financeDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.financeDetails div {
+  display: grid;
+  gap: 5px;
+}
+
+.financeDetails span {
+  color: #bdb6cd;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.financeDetails strong {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.financeDetails small {
+  color: #918aa1;
+  font-size: 9px;
+}
+
+.finance.goalReached {
+  background: #154c39;
+}
+
+.finance.goalReached .eyebrow {
+  color: #aee0c7;
+}
+
+.finance.goalReached .moneyBar i {
+  background: #65d49c;
+}
+
+.history {
+  margin-top: 20px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: #ebf0ec;
+  border: 1px solid #d7e0da;
+  border-radius: 18px;
+}
+
+.history > div:first-child {
+  min-width: 150px;
+}
+
+.history .eyebrow {
+  margin: 0 0 5px;
+}
+
+.history > div > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.historyMonths {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 7px;
+  flex: 1;
+}
+
+.historyMonths button {
+  min-width: 0;
+  padding: 8px 7px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--muted);
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.historyMonths button:hover {
+  border-color: #aac5b6;
+}
+
+.historyMonths button.active {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(29, 101, 72, 0.18);
+}
+
+.historyMonths span {
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.historyMonths strong {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.historyMonths small {
+  font-size: 8px;
+  opacity: 0.68;
+}
+
+.register {
+  margin: 20px 0 48px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 9px 30px rgba(23, 35, 30, 0.04);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sectionHead .eyebrow {
+  margin-bottom: 6px;
+}
+
+h2 {
+  font-family: Georgia, serif;
+  font-size: 30px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.dateLegend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dateLegend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.dateLegend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
+
+.pastLegend i {
+  background: #edf4ef;
+}
+
+.todayLegend i {
+  background: #fff0b8;
+  border-color: #dfbd4c;
+}
+
+.futureLegend i {
+  background: #fff;
+}
+
+.saveStatus {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.saveStatus i {
+  width: 7px;
+  height: 7px;
+  background: #4aa878;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #e8f5ed;
+}
+
+.calendarViewport {
+  padding-top: 22px;
+}
+
+.weekHeader,
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekHeader {
+  margin-bottom: 8px;
+}
+
+.weekHeader span {
+  text-align: center;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.weekHeader .weekendHeader {
+  color: #4c5751;
+}
+
+.dayCard {
+  min-height: 116px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  transition:
+    border-color 0.15s,
+    transform 0.15s,
+    background 0.15s;
+}
+
+.dayCard.pastDay:not(.saturday):not(.sunday):not(.offDay) {
+  background: #edf4ef;
+  border-color: #d9e7dd;
+}
+
+.dayCard.futureDay:not(.saturday):not(.sunday):not(.offDay) {
+  background: #fff;
+}
+
+.dayCard.today {
+  position: relative;
+  border-color: #d7ad28 !important;
+  box-shadow: 0 0 0 3px rgba(215, 173, 40, 0.16);
+}
+
+.dayCard.today::before {
+  content: "HOJE";
+  position: absolute;
+  top: -7px;
+  left: 12px;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: #d7ad28;
+  color: #fff;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.dayCard:not(.saturday):not(.sunday):focus-within {
+  border-color: var(--count);
+  box-shadow: 0 0 0 3px rgba(108, 79, 196, 0.1);
+  transform: translateY(-1px);
+}
+
+.dateBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dateBlock strong {
+  width: auto;
+  font-family: Georgia, serif;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.dateBlock span {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.entry {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.dayCard label {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.dayCard input {
+  width: 36px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  text-align: left;
+  color: var(--count);
+  font-size: 20px;
+  font-weight: 800;
+  -moz-appearance: textfield;
+}
+
+.dayCard input::-webkit-inner-spin-button {
+  appearance: none;
+}
+
+.dayCard input::placeholder {
+  color: #c9c2df;
+}
+
+.dayCard label small {
+  color: #9ba49f;
+  font-size: 7px;
+}
+
+.offToggle {
+  padding: 5px 0 5px 5px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: #a0a9a4;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.offToggle:hover {
+  color: var(--orange);
+}
+
+.dayCard.saturday {
+  background: #edf5ff;
+  border-color: #d8e9fb;
+}
+
+.dayCard.pastDay.saturday {
+  background: #dfedfc;
+}
+
+.dayCard.saturday .dateBlock strong {
+  color: #3976b9;
+}
+
+.dayCard.saturday .dateBlock span {
+  color: #6388ac;
+}
+
+.dayCard.saturday .rest {
+  background: #dbeafb;
+  color: #3976b9;
+}
+
+.dayCard.sunday {
+  background: #fff0ea;
+  border-color: #f8ddd1;
+}
+
+.dayCard.pastDay.sunday {
+  background: #f9e3da;
+}
+
+.dayCard.sunday .dateBlock strong {
+  color: #c36343;
+}
+
+.dayCard.sunday .dateBlock span {
+  color: #a97867;
+}
+
+.dayCard.sunday .rest {
+  background: #f8ded3;
+  color: #b85c3d;
+}
+
+.dayCard.offDay {
+  background: #f0f2f0;
+  border-color: transparent;
+}
+
+.dayCard.offDay .dateBlock strong,
+.dayCard.offDay .dateBlock span {
+  color: #929b96;
+}
+
+.rest {
+  align-self: flex-start;
+  padding: 5px 8px;
+  border: 0;
+  background: #eaeeeb;
+  color: #909995;
+  border-radius: 99px;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.offActive {
+  color: #9c603f;
+  background: #f8e8df;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+footer {
+  text-align: center;
+  color: #8b9590;
+  font-size: 11px;
+  padding: 4px 0 30px;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .monthPicker {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .stat:nth-child(4) {
+    border-top: 1px solid var(--line);
+  }
+
+  .finance {
+    grid-template-columns: 1fr 1.6fr;
+  }
+
+  .financeDetails {
+    grid-column: 1/-1;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .financeProgress {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .history {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .historyMonths {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .calendarViewport {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .weekHeader,
+  .dayGrid {
+    min-width: 920px;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    height: 68px;
+    padding: 0 18px;
+  }
+
+  .todayButton {
+    font-size: 0;
+    padding: 10px;
+  }
+
+  .todayButton::after {
+    content: "Hoje";
+    font-size: 12px;
+  }
+
+  .shell {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .hero {
+    padding: 38px 0 30px;
+  }
+
+  h1 {
+    font-size: 42px;
+  }
+
+  .intro {
+    font-size: 14px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat {
+    min-height: 120px;
+    padding: 19px;
+  }
+
+  .stat > strong {
+    font-size: 34px;
+  }
+
+  .finance {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .financeProgress {
+    padding: 18px 0;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .financeDetails {
+    grid-column: auto;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .history {
+    padding: 15px;
+  }
+
+  .historyMonths {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .register {
+    padding: 20px 14px;
+    border-radius: 18px;
+  }
+
+  .sectionHead {
+    align-items: start;
+    gap: 14px;
+  }
+
+  .sectionActions {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dateLegend {
+    gap: 8px;
+  }
+
+  .saveStatus {
+    max-width: 110px;
+    line-height: 1.25;
+  }
+}
+
+/* Fins de semana usam a mesma linguagem visual para identificação imediata. */
+.dayCard.saturday,
+.dayCard.sunday,
+.dayCard.pastDay.saturday,
+.dayCard.pastDay.sunday {
+  background: #c9cecb;
+  border-color: #aeb6b1;
+}
+
+.dayCard.saturday .dateBlock strong,
+.dayCard.sunday .dateBlock strong {
+  color: #39423d;
+}
+
+.dayCard.saturday .dateBlock span,
+.dayCard.sunday .dateBlock span {
+  color: #515d57;
+}
+
+.dayCard.saturday .rest,
+.dayCard.sunday .rest {
+  background: #aeb6b1;
+  color: #303a35;
+}
