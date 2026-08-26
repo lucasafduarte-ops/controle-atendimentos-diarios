@@ -29,10 +29,12 @@ body {
 button,
 input {
   font: inherit;
+  touch-action: manipulation;
 }
 
 button {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .topbar {
@@ -830,11 +832,18 @@ footer {
   .calendarViewport {
     overflow-x: auto;
     padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
   }
 
   .weekHeader,
   .dayGrid {
     min-width: 920px;
+  }
+
+  .dayCard {
+    scroll-snap-align: start;
   }
 }
 
@@ -958,4 +967,35 @@ footer {
 .dayCard.sunday .rest {
   background: #aeb6b1;
   color: #303a35;
+}
+
+/* Em telas de toque, aumenta a área clicável dos botões pequenos do
+   calendário sem alterar o visual aprovado (mesma fonte, mesmas cores). */
+@media (pointer: coarse) {
+  .offToggle {
+    padding: 10px 6px 10px 10px;
+    min-height: 40px;
+  }
+
+  .rest {
+    min-height: 32px;
+    padding: 9px 12px;
+  }
+
+  .dayCard label {
+    min-height: 40px;
+  }
+
+  .historyMonths button {
+    min-height: 44px;
+  }
+
+  .monthPicker button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .todayButton {
+    min-height: 44px;
+  }
 }
