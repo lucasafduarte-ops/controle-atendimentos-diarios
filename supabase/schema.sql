@@ -11,8 +11,22 @@ create table if not exists attendance_records (
   primary key (month_key, day)
 );
 
--- Segurança extra: habilita RLS e não cria nenhuma política.
--- Isso bloqueia qualquer acesso via chave pública (anon key); só a
--- service_role key (usada apenas no servidor, nunca no navegador)
--- consegue ler ou escrever nesta tabela.
+-- Concede a permissão básica de acesso à tabela para a service_role
+-- (usada só no servidor). Sem isso, a API responde 403 mesmo com uma
+-- chave válida, porque a tabela não teve nenhuma permissão concedida
+-- a nenhuma função (efeito de "Automatically expose new tables"
+-- desmarcado na criação do projeto).
+grant select, insert, update, delete on attendance_records to service_role;
+
+-- Segurança extra: habilita RLS e cria uma política liberando acesso
+-- total apenas para a service_role (usada só no servidor, nunca no
+-- navegador). A chave pública (anon key) continua sem nenhum acesso,
+-- já que não existe política para ela.
 alter table attendance_records enable row level security;
+
+create policy "service role tem acesso total"
+on attendance_records
+for all
+to service_role
+using (true)
+with check (true);

@@ -1023,6 +1023,31 @@ footer {
     max-width: 110px;
     line-height: 1.25;
   }
+
+  /* Calendário empilhado: um dia por linha, sem rolagem horizontal. */
+  .weekHeader {
+    display: none;
+  }
+
+  .calendarViewport {
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .dayGrid {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .dayCard {
+    min-height: 0;
+  }
+
+  .dayCard .entry {
+    align-items: center;
+  }
 }
 
 /* Fins de semana usam a mesma linguagem visual para identificação imediata. */
