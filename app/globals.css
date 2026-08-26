@@ -538,6 +538,87 @@ h2 {
   box-shadow: 0 0 0 4px #e8f5ed;
 }
 
+.saveStatus.syncing i {
+  background: var(--count);
+  box-shadow: 0 0 0 4px #efe9fb;
+}
+
+.saveStatus.offline i {
+  background: #d7ad28;
+  box-shadow: 0 0 0 4px #fff6da;
+}
+
+.pinGate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(23, 35, 30, 0.92);
+  backdrop-filter: blur(6px);
+  padding: 20px;
+}
+
+.pinCard {
+  width: min(360px, 100%);
+  background: var(--paper);
+  border-radius: 24px;
+  padding: 34px 30px;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+}
+
+.pinCard h2 {
+  margin: 6px 0 10px;
+}
+
+.pinHint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 22px;
+}
+
+.pinCard input {
+  width: 100%;
+  text-align: center;
+  letter-spacing: 0.4em;
+  font-size: 26px;
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.pinCard input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(29, 101, 72, 0.12);
+}
+
+.pinCard button {
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.pinCard button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pinError {
+  color: #c0392b;
+  font-size: 12px;
+  margin: -6px 0 14px;
+}
+
 .calendarViewport {
   padding-top: 22px;
 }

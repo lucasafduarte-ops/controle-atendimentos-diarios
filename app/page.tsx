@@ -28,6 +28,74 @@ const importedRecords: Records = {
   "2026-08": {"3":17,"4":16,"5":39,"6":32,"7":20,"10":21,"11":19,"12":18,"13":24,"14":"off"},
 };
 
+const PENDING_KEY = "atendimentos-diarios-pendentes-v1";
+
+function readQueue(): Record<string, DayValue | null> {
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeQueue(queue: Record<string, DayValue | null>) {
+  localStorage.setItem(PENDING_KEY, JSON.stringify(queue));
+}
+
+function queueChange(monthKey: string, day: string, value: DayValue | null) {
+  const queue = readQueue();
+  queue[`${monthKey}:${day}`] = value;
+  writeQueue(queue);
+}
+
+function removeFromQueue(monthKey: string, day: string) {
+  const queue = readQueue();
+  delete queue[`${monthKey}:${day}`];
+  writeQueue(queue);
+}
+
+async function sendChange(monthKey: string, day: string, value: DayValue | null) {
+  const res = await fetch("/api/records", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ monthKey, day, value }),
+  });
+
+  if (!res.ok) {
+    throw new Error("falha ao sincronizar");
+  }
+}
+
+async function flushQueue(): Promise<number> {
+  const queue = readQueue();
+  const entries = Object.keys(queue);
+
+  for (const entryKey of entries) {
+    const [monthKey, day] = entryKey.split(":");
+    const value = queue[entryKey];
+
+    try {
+      await sendChange(monthKey, day, value);
+      removeFromQueue(monthKey, day);
+    } catch {
+      break;
+    }
+  }
+
+  return Object.keys(readQueue()).length;
+}
+
+function mergeCloudFirst(local: Records, cloud: Records): Records {
+  const merged: Records = {};
+  const months = new Set([...Object.keys(local), ...Object.keys(cloud)]);
+
+  for (const item of months) {
+    merged[item] = { ...local[item], ...cloud[item] };
+  }
+
+  return merged;
+}
+
 export default function Home() {
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(7);
@@ -38,6 +106,14 @@ export default function Home() {
     month: number;
     day: number;
   } | null>(null);
+
+  const [authStatus, setAuthStatus] = useState<
+    "checking" | "authed" | "unauthed" | "offline"
+  >("checking");
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [pinSubmitting, setPinSubmitting] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -80,6 +156,80 @@ export default function Home() {
       );
     }
   }, [records, ready]);
+
+  async function syncWithCloud() {
+    try {
+      const res = await fetch("/api/records");
+
+      if (res.status === 401) {
+        setAuthStatus("unauthed");
+        return;
+      }
+
+      if (!res.ok) throw new Error("erro ao buscar registros");
+
+      const data = await res.json();
+      setAuthStatus("authed");
+
+      setRecords((current) => {
+        const merged = mergeCloudFirst(current, data.records ?? {});
+
+        fetch("/api/records/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: merged }),
+        }).catch(() => {
+          /* tenta de novo na próxima sincronização */
+        });
+
+        return merged;
+      });
+
+      setPendingCount(await flushQueue());
+    } catch {
+      setAuthStatus((current) => (current === "authed" ? current : "offline"));
+    }
+  }
+
+  useEffect(() => {
+    if (!ready) return;
+
+    syncWithCloud();
+
+    const handleOnline = () => {
+      flushQueue().then(setPendingCount);
+      syncWithCloud();
+    };
+
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [ready]);
+
+  async function submitPin(event: React.FormEvent) {
+    event.preventDefault();
+    setPinSubmitting(true);
+    setPinError(null);
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+
+      if (!res.ok) {
+        setPinError("Código incorreto. Tente novamente.");
+        return;
+      }
+
+      setPin("");
+      await syncWithCloud();
+    } catch {
+      setPinError("Não foi possível conectar. Verifique sua internet.");
+    } finally {
+      setPinSubmitting(false);
+    }
+  }
 
   const key = monthKey(year, month);
   const monthRecords = records[key] ?? {};
@@ -176,6 +326,14 @@ export default function Home() {
       ...current,
       [key]: nextMonth,
     }));
+
+    const dayKey = String(day);
+    const valueToSend = value === undefined ? null : value;
+
+    sendChange(key, dayKey, valueToSend)
+      .then(() => removeFromQueue(key, dayKey))
+      .catch(() => queueChange(key, dayKey, valueToSend))
+      .then(() => setPendingCount(Object.keys(readQueue()).length));
   }
 
   function updateDay(day: number, raw: string) {
@@ -205,8 +363,52 @@ export default function Home() {
     }
   }
 
+  const syncState =
+    authStatus === "offline"
+      ? "offline"
+      : pendingCount > 0
+        ? "syncing"
+        : "synced";
+
+  const syncLabel =
+    authStatus === "offline"
+      ? "Sem conexão — salvo neste aparelho"
+      : pendingCount > 0
+        ? "Sincronizando…"
+        : "Sincronizado na nuvem";
+
   return (
     <main>
+      {authStatus === "unauthed" && (
+        <div className="pinGate">
+          <form className="pinCard" onSubmit={submitPin}>
+            <p className="eyebrow">ACESSO PESSOAL</p>
+            <h2>Digite seu código</h2>
+
+            <p className="pinHint">
+              Esse código libera a sincronização dos seus atendimentos entre
+              o computador e o celular.
+            </p>
+
+            <input
+              type="password"
+              inputMode="numeric"
+              autoFocus
+              autoComplete="off"
+              value={pin}
+              onChange={(event) => setPin(event.target.value)}
+              placeholder="••••"
+            />
+
+            {pinError && <p className="pinError">{pinError}</p>}
+
+            <button type="submit" disabled={pinSubmitting || pin === ""}>
+              {pinSubmitting ? "Entrando…" : "Entrar"}
+            </button>
+          </form>
+        </div>
+      )}
+
       <header className="topbar">
         <div className="brand">
           <span className="brandMark">LD</span>
@@ -403,8 +605,8 @@ export default function Home() {
                 </span>
               </div>
 
-              <span className="saveStatus">
-                <i /> Salvo automaticamente
+              <span className={`saveStatus ${syncState}`}>
+                <i /> {syncLabel}
               </span>
             </div>
           </div>
