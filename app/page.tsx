@@ -201,8 +201,21 @@ export default function Home() {
       syncWithCloud();
     };
 
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") {
+        syncWithCloud();
+      }
+    };
+
     window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("focus", handleVisible);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("focus", handleVisible);
+    };
   }, [ready]);
 
   async function submitPin(event: React.FormEvent) {
