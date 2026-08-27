@@ -522,6 +522,11 @@ h2 {
   background: #fff;
 }
 
+.holidayLegend i {
+  background: #fdece0;
+  border-color: #f3c9a3;
+}
+
 .saveStatus {
   display: flex;
   align-items: center;
@@ -1073,6 +1078,33 @@ footer {
 .dayCard.sunday .rest {
   background: #aeb6b1;
   color: #303a35;
+}
+
+/* Feriados nacionais: destaque em tom laranja, distinto do cinza dos
+   fins de semana e do cinza-claro das folgas manuais. */
+.dayCard.holiday {
+  background: #fdece0;
+  border-color: #f3c9a3;
+}
+
+.dayCard.pastDay.holiday {
+  background: #f8ddc7;
+}
+
+.dayCard.holiday .dateBlock strong {
+  color: #b85c1f;
+}
+
+.dayCard.holiday .holidayName {
+  color: #b85c1f;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dayCard.holiday .offToggle {
+  border-left-color: #f3c9a3;
 }
 
 /* Em telas de toque, aumenta a área clicável dos botões pequenos do

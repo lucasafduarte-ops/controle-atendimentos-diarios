@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const weekDays = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
@@ -15,6 +15,48 @@ type Records = Record<string, Record<string, DayValue>>;
 
 const monthKey = (year: number, month: number) =>
   `${year}-${String(month + 1).padStart(2, "0")}`;
+
+// Algoritmo de Gauss/Meeus para a data da Páscoa (usado só para achar a
+// Sexta-feira Santa, o único feriado nacional com data móvel).
+function easterDate(year: number) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+// Somente feriados nacionais oficiais (Lei 6.802/80 + Lei 14.759/2023).
+// Carnaval e Corpus Christi são pontos facultativos, não feriados
+// nacionais por lei, então não entram aqui de propósito.
+function nationalHolidays(year: number): Record<string, string> {
+  const goodFriday = easterDate(year);
+  goodFriday.setDate(goodFriday.getDate() - 2);
+
+  return {
+    [`${year}-0-1`]: "Confraternização Universal",
+    [`${year}-3-21`]: "Tiradentes",
+    [`${year}-4-1`]: "Dia do Trabalho",
+    [`${year}-8-7`]: "Independência do Brasil",
+    [`${year}-9-12`]: "Nossa Senhora Aparecida",
+    [`${year}-10-2`]: "Finados",
+    [`${year}-10-15`]: "Proclamação da República",
+    [`${year}-10-20`]: "Consciência Negra",
+    [`${year}-11-25`]: "Natal",
+    [`${goodFriday.getFullYear()}-${goodFriday.getMonth()}-${goodFriday.getDate()}`]:
+      "Sexta-feira Santa",
+  };
+}
 
 const importedRecords: Records = {
   "2025-12": {"1":16,"2":20,"3":14,"4":15,"5":16,"8":16,"9":23,"10":2,"11":14,"12":16,"15":20,"16":27,"17":23,"18":23,"19":39,"22":25,"23":16,"24":22,"25":"off","26":22,"29":28,"30":21,"31":16},
@@ -114,6 +156,8 @@ export default function Home() {
   const [pinError, setPinError] = useState<string | null>(null);
   const [pinSubmitting, setPinSubmitting] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [scrollToToday, setScrollToToday] = useState(false);
+  const todayCardRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -252,17 +296,20 @@ export default function Home() {
     ? new Date(today.year, today.month, today.day).getTime()
     : null;
 
+  const holidaysThisYear = useMemo(() => nationalHolidays(year), [year]);
+
   const days = useMemo(
     () =>
       Array.from({ length: daysInMonth }, (_, i) => {
         const day = i + 1;
         const weekDay = new Date(year, month, day).getDay();
         const dayTime = new Date(year, month, day).getTime();
+        const weekend = weekDay === 0 || weekDay === 6;
 
         return {
           day,
           label: weekDays[weekDay],
-          weekend: weekDay === 0 || weekDay === 6,
+          weekend,
           weekendClass:
             weekDay === 6
               ? "saturday"
@@ -277,9 +324,12 @@ export default function Home() {
                 : dayTime === todayStart
                   ? "today"
                   : "futureDay",
+          holidayName: weekend
+            ? undefined
+            : holidaysThisYear[`${year}-${month}-${day}`],
         };
       }),
-    [year, month, daysInMonth, todayStart],
+    [year, month, daysInMonth, todayStart, holidaysThisYear],
   );
 
   const numericValues = Object.values(monthRecords).filter(
@@ -373,8 +423,16 @@ export default function Home() {
     if (today) {
       setYear(today.year);
       setMonth(today.month);
+      setScrollToToday(true);
     }
   }
+
+  useEffect(() => {
+    if (scrollToToday && todayCardRef.current) {
+      todayCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      setScrollToToday(false);
+    }
+  }, [scrollToToday, days]);
 
   const syncState =
     authStatus === "offline"
@@ -616,6 +674,11 @@ export default function Home() {
                   <i />
                   Próximos
                 </span>
+
+                <span className="holidayLegend">
+                  <i />
+                  Feriado
+                </span>
               </div>
 
               <span className={`saveStatus ${syncState}`}>
@@ -645,6 +708,7 @@ export default function Home() {
                     weekend,
                     weekendClass,
                     temporalClass,
+                    holidayName,
                   },
                   index,
                 ) => {
@@ -658,17 +722,21 @@ export default function Home() {
                     <article
                       className={`dayCard ${weekendClass} ${temporalClass} ${
                         isOff ? "offDay" : ""
-                      }`}
+                      } ${holidayName ? "holiday" : ""}`}
                       style={
                         index === 0
                           ? { gridColumnStart: firstDayColumn }
                           : undefined
                       }
+                      ref={temporalClass === "today" ? todayCardRef : undefined}
                       key={day}
                     >
                       <div className="dateBlock">
                         <strong>{String(day).padStart(2, "0")}</strong>
                         <span>{label}</span>
+                        {holidayName && (
+                          <span className="holidayName">{holidayName}</span>
+                        )}
                       </div>
 
                       {weekend ? (
@@ -692,7 +760,9 @@ export default function Home() {
                               type="number"
                               min="0"
                               inputMode="numeric"
-                              placeholder="—"
+                              placeholder={
+                                temporalClass === "pastDay" ? "—" : "0"
+                              }
                               value={
                                 typeof value === "number" ? value : ""
                               }
