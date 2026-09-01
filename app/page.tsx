@@ -170,11 +170,17 @@ export default function Home() {
     const part = (type: string) =>
       Number(parts.find((item) => item.type === type)?.value);
 
+    const currentYear = part("year");
+    const currentMonth = part("month") - 1;
+
     setToday({
-      year: part("year"),
-      month: part("month") - 1,
+      year: currentYear,
+      month: currentMonth,
       day: part("day"),
     });
+
+    setYear(currentYear);
+    setMonth(currentMonth);
 
     const saved = localStorage.getItem("atendimentos-diarios-v2");
 
