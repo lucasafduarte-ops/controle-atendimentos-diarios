@@ -652,6 +652,32 @@ h2 {
   color: #4c5751;
 }
 
+.weekTotal {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #eaf3ee;
+  border: 1px dashed #b9d6c4;
+}
+
+.weekTotal span {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--green);
+}
+
+.weekTotal strong {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--green);
+}
+
 .dayCard {
   min-height: 116px;
   border: 1px solid var(--line);

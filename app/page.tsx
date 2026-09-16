@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const weekDays = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
@@ -348,6 +348,44 @@ export default function Home() {
   const businessDays = days.filter((item) => !item.weekend).length;
   const average = workedDays ? Math.round(total / workedDays) : 0;
 
+  const firstDayColumn = ((new Date(year, month, 1).getDay() + 6) % 7) + 1;
+
+  const weekTotals = useMemo(() => {
+    const list: { startDay: number; endDay: number; total: number }[] = [];
+    let currentWeekIndex = -1;
+    let currentTotal = 0;
+    let startDay = 0;
+    let lastDay = 0;
+
+    for (const { day } of days) {
+      const weekIndex = Math.floor((day - 1 + firstDayColumn - 1) / 7);
+
+      if (weekIndex !== currentWeekIndex) {
+        if (currentWeekIndex !== -1) {
+          list.push({ startDay, endDay: lastDay, total: currentTotal });
+        }
+
+        currentWeekIndex = weekIndex;
+        currentTotal = 0;
+        startDay = day;
+      }
+
+      const value = monthRecords[String(day)];
+      if (typeof value === "number") currentTotal += value;
+      lastDay = day;
+    }
+
+    if (currentWeekIndex !== -1) {
+      list.push({ startDay, endDay: lastDay, total: currentTotal });
+    }
+
+    return list;
+  }, [days, firstDayColumn, monthRecords]);
+
+  const weekTotalByEndDay = new Map(
+    weekTotals.map((week) => [week.endDay, week]),
+  );
+
   const progress = businessDays
     ? Math.min(100, Math.round((completedDays / businessDays) * 100))
     : 0;
@@ -366,6 +404,7 @@ export default function Home() {
   );
 
   const history = Object.keys(records)
+    .filter((period) => Number(period.split("-")[0]) >= 2026)
     .sort()
     .map((period) => {
       const [itemYear, itemMonth] = period.split("-").map(Number);
@@ -720,76 +759,88 @@ export default function Home() {
                 ) => {
                   const value = monthRecords[String(day)];
                   const isOff = value === "off";
-
-                  const firstDayColumn =
-                    ((new Date(year, month, 1).getDay() + 6) % 7) + 1;
+                  const weekInfo = weekTotalByEndDay.get(day);
 
                   return (
-                    <article
-                      className={`dayCard ${weekendClass} ${temporalClass} ${
-                        isOff ? "offDay" : ""
-                      } ${holidayName ? "holiday" : ""}`}
-                      style={
-                        index === 0
-                          ? { gridColumnStart: firstDayColumn }
-                          : undefined
-                      }
-                      ref={temporalClass === "today" ? todayCardRef : undefined}
-                      key={day}
-                    >
-                      <div className="dateBlock">
-                        <strong>{String(day).padStart(2, "0")}</strong>
-                        <span>{label}</span>
-                        {holidayName && (
-                          <span className="holidayName">{holidayName}</span>
-                        )}
-                      </div>
+                    <Fragment key={day}>
+                      <article
+                        className={`dayCard ${weekendClass} ${temporalClass} ${
+                          isOff ? "offDay" : ""
+                        } ${holidayName ? "holiday" : ""}`}
+                        style={
+                          index === 0
+                            ? { gridColumnStart: firstDayColumn }
+                            : undefined
+                        }
+                        ref={
+                          temporalClass === "today" ? todayCardRef : undefined
+                        }
+                      >
+                        <div className="dateBlock">
+                          <strong>{String(day).padStart(2, "0")}</strong>
+                          <span>{label}</span>
+                          {holidayName && (
+                            <span className="holidayName">{holidayName}</span>
+                          )}
+                        </div>
 
-                      {weekend ? (
-                        <span className="rest">Fim de semana</span>
-                      ) : isOff ? (
-                        <button
-                          className="rest offActive"
-                          onClick={() => setDay(day)}
-                          aria-label={`Remover folga do dia ${day}`}
-                        >
-                          Folga / feriado ×
-                        </button>
-                      ) : (
-                        <div className="entry">
-                          <label>
-                            <span className="srOnly">
-                              Atendimentos no dia {day}
-                            </span>
-
-                            <input
-                              type="number"
-                              min="0"
-                              inputMode="numeric"
-                              placeholder={
-                                temporalClass === "pastDay" ? "—" : "0"
-                              }
-                              value={
-                                typeof value === "number" ? value : ""
-                              }
-                              onChange={(event) =>
-                                updateDay(day, event.target.value)
-                              }
-                            />
-
-                            <small>atend.</small>
-                          </label>
-
+                        {weekend ? (
+                          <span className="rest">Fim de semana</span>
+                        ) : isOff ? (
                           <button
-                            className="offToggle"
-                            onClick={() => setDay(day, "off")}
-                            aria-label={`Marcar dia ${day} como folga ou feriado`}
+                            className="rest offActive"
+                            onClick={() => setDay(day)}
+                            aria-label={`Remover folga do dia ${day}`}
                           >
-                            Folga
+                            Folga / feriado ×
                           </button>
+                        ) : (
+                          <div className="entry">
+                            <label>
+                              <span className="srOnly">
+                                Atendimentos no dia {day}
+                              </span>
+
+                              <input
+                                type="number"
+                                min="0"
+                                inputMode="numeric"
+                                placeholder={
+                                  temporalClass === "pastDay" ? "—" : "0"
+                                }
+                                value={
+                                  typeof value === "number" ? value : ""
+                                }
+                                onChange={(event) =>
+                                  updateDay(day, event.target.value)
+                                }
+                              />
+
+                              <small>atend.</small>
+                            </label>
+
+                            <button
+                              className="offToggle"
+                              onClick={() => setDay(day, "off")}
+                              aria-label={`Marcar dia ${day} como folga ou feriado`}
+                            >
+                              Folga
+                            </button>
+                          </div>
+                        )}
+                      </article>
+
+                      {weekInfo && (
+                        <div className="weekTotal">
+                          <span>
+                            Semana de{" "}
+                            {String(weekInfo.startDay).padStart(2, "0")} a{" "}
+                            {String(weekInfo.endDay).padStart(2, "0")}
+                          </span>
+                          <strong>{weekInfo.total} atend.</strong>
                         </div>
                       )}
-                    </article>
+                    </Fragment>
                   );
                 },
               )}
