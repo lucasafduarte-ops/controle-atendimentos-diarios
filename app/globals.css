@@ -55,6 +55,14 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.brand:hover strong {
+  color: var(--green);
 }
 
 .brandMark {

@@ -472,6 +472,10 @@ export default function Home() {
     }
   }
 
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   useEffect(() => {
     if (scrollToToday && todayCardRef.current) {
       todayCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -526,14 +530,19 @@ export default function Home() {
       )}
 
       <header className="topbar">
-        <div className="brand">
+        <button
+          type="button"
+          className="brand"
+          onClick={scrollToTop}
+          aria-label="Voltar ao topo da página"
+        >
           <span className="brandMark">LD</span>
 
           <div>
             <strong>Meu Controle</strong>
             <small>Atendimentos diários</small>
           </div>
-        </div>
+        </button>
 
         <button className="todayButton" onClick={goToday}>
           Ir para o mês atual
