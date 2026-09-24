@@ -379,6 +379,91 @@ h1 span {
   font-size: 9px;
 }
 
+.financeGoal {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.financeGoalInput label {
+  display: block;
+  color: #cfc2f2;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.financeGoalField {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 8px 14px;
+  width: fit-content;
+}
+
+.financeGoalField span {
+  color: #cfc2f2;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.financeGoalField input {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  width: 110px;
+}
+
+.financeGoalField input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.financeGoalField input:focus {
+  outline: none;
+}
+
+.financeGoalError {
+  margin: 6px 0 0;
+  color: #ffb4a8;
+  font-size: 11px;
+}
+
+.financeGoalResult {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+  text-align: right;
+  color: #cfc9da;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.financeGoalResult strong {
+  color: #fff;
+}
+
+.financeGoalResult.reached {
+  color: #a8e6c3;
+  font-weight: 700;
+}
+
+.financeGoalResult.impossible {
+  color: #ffb4a8;
+}
+
 .finance.goalReached {
   background: #154c39;
 }
@@ -389,6 +474,10 @@ h1 span {
 
 .finance.goalReached .moneyBar i {
   background: #65d49c;
+}
+
+.finance.goalReached .financeGoalInput label {
+  color: #aee0c7;
 }
 
 .history {
@@ -1028,6 +1117,15 @@ footer {
     grid-column: auto;
     padding-top: 0;
     border-top: 0;
+  }
+
+  .financeGoal {
+    padding-top: 16px;
+  }
+
+  .financeGoalResult {
+    text-align: left;
+    min-width: 0;
   }
 
   .history {

@@ -138,6 +138,58 @@ function mergeCloudFirst(local: Records, cloud: Records): Records {
   return merged;
 }
 
+const GOALS_STORAGE_KEY = "atendimentos-metas-v1";
+const GOALS_PENDING_KEY = "atendimentos-metas-pendentes-v1";
+
+function readGoalsQueue(): Record<string, number | null> {
+  try {
+    return JSON.parse(localStorage.getItem(GOALS_PENDING_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeGoalsQueue(queue: Record<string, number | null>) {
+  localStorage.setItem(GOALS_PENDING_KEY, JSON.stringify(queue));
+}
+
+function queueGoalChange(monthKey: string, value: number | null) {
+  const queue = readGoalsQueue();
+  queue[monthKey] = value;
+  writeGoalsQueue(queue);
+}
+
+function removeGoalFromQueue(monthKey: string) {
+  const queue = readGoalsQueue();
+  delete queue[monthKey];
+  writeGoalsQueue(queue);
+}
+
+async function sendGoalChange(monthKey: string, value: number | null) {
+  const res = await fetch("/api/goals", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ monthKey, value }),
+  });
+
+  if (!res.ok) {
+    throw new Error("falha ao sincronizar meta");
+  }
+}
+
+async function flushGoalsQueue() {
+  const queue = readGoalsQueue();
+
+  for (const monthKey of Object.keys(queue)) {
+    try {
+      await sendGoalChange(monthKey, queue[monthKey]);
+      removeGoalFromQueue(monthKey);
+    } catch {
+      break;
+    }
+  }
+}
+
 export default function Home() {
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(7);
@@ -158,6 +210,10 @@ export default function Home() {
   const [pendingCount, setPendingCount] = useState(0);
   const [scrollToToday, setScrollToToday] = useState(false);
   const todayCardRef = useRef<HTMLElement | null>(null);
+
+  const [goals, setGoals] = useState<Record<string, number>>({});
+  const [goalInput, setGoalInput] = useState("");
+  const [goalError, setGoalError] = useState<string | null>(null);
 
   useEffect(() => {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -195,6 +251,16 @@ export default function Home() {
       }
     }
 
+    const savedGoals = localStorage.getItem(GOALS_STORAGE_KEY);
+
+    if (savedGoals) {
+      try {
+        setGoals(JSON.parse(savedGoals));
+      } catch {
+        /* sem metas salvas ainda */
+      }
+    }
+
     setReady(true);
   }, []);
 
@@ -206,6 +272,12 @@ export default function Home() {
       );
     }
   }, [records, ready]);
+
+  useEffect(() => {
+    if (ready) {
+      localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));
+    }
+  }, [goals, ready]);
 
   async function syncWithCloud() {
     try {
@@ -235,6 +307,27 @@ export default function Home() {
         return merged;
       });
 
+      const goalsRes = await fetch("/api/goals");
+
+      if (goalsRes.ok) {
+        const goalsData = await goalsRes.json();
+
+        setGoals((current) => {
+          const merged = { ...current, ...(goalsData.goals ?? {}) };
+
+          fetch("/api/goals/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ goals: merged }),
+          }).catch(() => {
+            /* tenta de novo na próxima sincronização */
+          });
+
+          return merged;
+        });
+      }
+
+      await flushGoalsQueue();
       setPendingCount(await flushQueue());
     } catch {
       setAuthStatus((current) => (current === "authed" ? current : "offline"));
@@ -403,6 +496,43 @@ export default function Home() {
     Math.round((total / paymentGoal) * 100),
   );
 
+  const currentGoal = goals[key];
+
+  const goalPlan = useMemo(() => {
+    if (currentGoal === undefined) return null;
+
+    const requiredTotal =
+      paymentGoal + Math.ceil((currentGoal - basePayment) / extraRate);
+    const remainingNeeded = Math.max(0, requiredTotal - total);
+
+    if (remainingNeeded === 0) {
+      return { status: "reached" as const };
+    }
+
+    const remainingDays = days.filter((item) => {
+      if (item.weekend || item.holidayName) return false;
+      if (item.temporalClass === "pastDay") return false;
+      return monthRecords[String(item.day)] === undefined;
+    }).length;
+
+    if (remainingDays === 0) {
+      return { status: "impossible" as const };
+    }
+
+    return {
+      status: "onTrack" as const,
+      remainingNeeded,
+      remainingDays,
+      perDay: Math.ceil(remainingNeeded / remainingDays),
+    };
+  }, [currentGoal, total, days, monthRecords]);
+
+  useEffect(() => {
+    setGoalInput(currentGoal !== undefined ? String(currentGoal) : "");
+    setGoalError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, ready]);
+
   const history = Object.keys(records)
     .filter((period) => Number(period.split("-")[0]) >= 2026)
     .sort()
@@ -442,6 +572,39 @@ export default function Home() {
       .then(() => removeFromQueue(key, dayKey))
       .catch(() => queueChange(key, dayKey, valueToSend))
       .then(() => setPendingCount(Object.keys(readQueue()).length));
+  }
+
+  function commitGoal(rawValue: string) {
+    if (rawValue.trim() === "") {
+      setGoals((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+
+      setGoalError(null);
+
+      sendGoalChange(key, null).catch(() => queueGoalChange(key, null));
+      return;
+    }
+
+    const parsed = Number(rawValue);
+
+    if (!Number.isFinite(parsed) || parsed < basePayment) {
+      setGoalError(`Digite um valor de pelo menos ${currency.format(basePayment)}.`);
+      return;
+    }
+
+    const achievableValue =
+      basePayment + Math.ceil((parsed - basePayment) / extraRate) * extraRate;
+
+    setGoalError(null);
+    setGoals((current) => ({ ...current, [key]: achievableValue }));
+    setGoalInput(String(achievableValue));
+
+    sendGoalChange(key, achievableValue).catch(() =>
+      queueGoalChange(key, achievableValue),
+    );
   }
 
   function updateDay(day: number, raw: string) {
@@ -679,6 +842,63 @@ export default function Home() {
                 {currency.format(extraAttendances * extraRate)} adicionais
               </small>
             </div>
+          </div>
+
+          <div className="financeGoal">
+            <div className="financeGoalInput">
+              <label htmlFor="goalInput">Meta pessoal do mês</label>
+
+              <div className="financeGoalField">
+                <span>R$</span>
+                <input
+                  id="goalInput"
+                  type="number"
+                  inputMode="numeric"
+                  min={basePayment}
+                  step={extraRate}
+                  placeholder={`mín. ${basePayment}`}
+                  value={goalInput}
+                  onChange={(event) => setGoalInput(event.target.value)}
+                  onBlur={() => commitGoal(goalInput)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      (event.target as HTMLInputElement).blur();
+                    }
+                  }}
+                />
+              </div>
+
+              {goalError && <p className="financeGoalError">{goalError}</p>}
+            </div>
+
+            {goalPlan && (
+              <p
+                className={`financeGoalResult ${
+                  goalPlan.status !== "onTrack" ? goalPlan.status : ""
+                }`}
+              >
+                {goalPlan.status === "reached" && (
+                  <>🎉 Meta pessoal batida para este mês!</>
+                )}
+
+                {goalPlan.status === "impossible" && (
+                  <>
+                    Não é mais possível atingir essa meta com os dias que
+                    restam neste mês.
+                  </>
+                )}
+
+                {goalPlan.status === "onTrack" && (
+                  <>
+                    Faltam{" "}
+                    <strong>{goalPlan.remainingNeeded} atendimentos</strong> em{" "}
+                    <strong>{goalPlan.remainingDays} dias úteis</strong> —
+                    aproximadamente{" "}
+                    <strong>{goalPlan.perDay} por dia</strong>.
+                  </>
+                )}
+              </p>
+            )}
           </div>
         </section>
 

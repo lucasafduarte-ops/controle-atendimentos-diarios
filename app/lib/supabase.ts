@@ -98,3 +98,69 @@ export async function upsertMissingRecords(entries: RecordRow[]) {
     throw new Error(`Falha na migração para o Supabase (${res.status})`);
   }
 }
+
+type GoalRow = { month_key: string; value: number };
+
+export async function fetchAllGoals(): Promise<GoalRow[]> {
+  const { url } = config();
+
+  const res = await fetch(
+    `${url}/rest/v1/monthly_goals?select=month_key,value`,
+    { headers: headers(), cache: "no-store" },
+  );
+
+  if (!res.ok) {
+    throw new Error(`Falha ao ler metas do Supabase (${res.status})`);
+  }
+
+  return res.json();
+}
+
+export async function upsertGoal(monthKey: string, value: number) {
+  const { url } = config();
+
+  const res = await fetch(`${url}/rest/v1/monthly_goals?on_conflict=month_key`, {
+    method: "POST",
+    headers: headers({ Prefer: "resolution=merge-duplicates" }),
+    body: JSON.stringify([
+      { month_key: monthKey, value, updated_at: new Date().toISOString() },
+    ]),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Falha ao salvar meta no Supabase (${res.status})`);
+  }
+}
+
+export async function deleteGoal(monthKey: string) {
+  const { url } = config();
+
+  const res = await fetch(
+    `${url}/rest/v1/monthly_goals?month_key=eq.${encodeURIComponent(monthKey)}`,
+    { method: "DELETE", headers: headers() },
+  );
+
+  if (!res.ok) {
+    throw new Error(`Falha ao remover meta no Supabase (${res.status})`);
+  }
+}
+
+export async function upsertMissingGoals(entries: GoalRow[]) {
+  if (!entries.length) return;
+  const { url } = config();
+
+  const res = await fetch(`${url}/rest/v1/monthly_goals?on_conflict=month_key`, {
+    method: "POST",
+    headers: headers({ Prefer: "resolution=ignore-duplicates" }),
+    body: JSON.stringify(
+      entries.map((entry) => ({
+        ...entry,
+        updated_at: new Date().toISOString(),
+      })),
+    ),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Falha na migração de metas para o Supabase (${res.status})`);
+  }
+}

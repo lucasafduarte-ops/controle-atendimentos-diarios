@@ -30,3 +30,24 @@ for all
 to service_role
 using (true)
 with check (true);
+
+-- Tabela separada para a meta financeira pessoal de cada mês. Fica
+-- fora de attendance_records de propósito, para nunca contaminar os
+-- totais/médias de atendimentos (que somam qualquer valor numérico
+-- guardado na mesma linha do dia).
+create table if not exists monthly_goals (
+  month_key text primary key,
+  value integer not null,
+  updated_at timestamptz not null default now()
+);
+
+grant select, insert, update, delete on monthly_goals to service_role;
+
+alter table monthly_goals enable row level security;
+
+create policy "service role tem acesso total"
+on monthly_goals
+for all
+to service_role
+using (true)
+with check (true);
